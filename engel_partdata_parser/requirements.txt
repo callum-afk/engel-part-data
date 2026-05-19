@@ -1,0 +1,8 @@
+google-cloud-storage
+google-cloud-bigquery
+cloudevents
+fastapi
+uvicorn
+pydantic
+python-dateutil
+pytest
