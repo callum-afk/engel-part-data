@@ -26,7 +26,8 @@ RAW_BUCKET = os.getenv("RAW_BUCKET", "notpla-engel-partdata-raw")
 PROCESSED_BUCKET = os.getenv("PROCESSED_BUCKET", "notpla-engel-partdata-processed")
 FAILED_BUCKET = os.getenv("FAILED_BUCKET", "notpla-engel-partdata-failed")
 BQ_LOCATION = os.getenv("BQ_LOCATION", "europe-west2")
-PARSER_VERSION = os.getenv("PARSER_VERSION", "0.1.0")
+PARSER_VERSION = os.getenv("PARSER_VERSION", "0.1.2")
+FORCE_REPARSE = os.getenv("FORCE_REPARSE", "false").lower() == "true"
 
 app = FastAPI(title="Engel Partdata Parser")
 
@@ -50,7 +51,9 @@ def process_one_file(source_bucket: str, source_object: str, local_input: Path |
     upload_id = build_upload_id(file_sha256)
     bundle, _ = parse_partdata(upload_id, PARSER_VERSION, local_path, Path("/tmp"))
 
-    if write_bigquery and not force_reparse and bq.already_parsed(file_sha256):
+    # Allow explicit bypass of already_parsed guard using env or function flag.
+    effective_force_reparse = force_reparse or FORCE_REPARSE
+    if write_bigquery and not effective_force_reparse and bq.already_parsed(file_sha256):
         return {"status": "already_parsed", "upload_id": upload_id, "source_bucket": source_bucket, "source_object": source_object, "raw_variable_count": 0, "curated_fields_populated": 0, "profile_point_count": 0, "parse_status": "already_parsed"}
 
     try:
