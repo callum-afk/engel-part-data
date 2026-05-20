@@ -41,6 +41,8 @@ class UploadRecord(BaseModel):
     source_bucket: str
     source_object: str
     file_name: str
+    # Processing code extracted from setupfile_<CODE>.partdata filenames.
+    processing_code: Optional[str] = None
     file_size_bytes: int
     file_sha256: str
     uploaded_at: datetime
@@ -60,6 +62,8 @@ class UploadRecord(BaseModel):
 # Model for curated scalar setup fields.
 class CuratedSetup(BaseModel):
     upload_id: str
+    # Processing code extracted from setupfile_<CODE>.partdata filenames.
+    processing_code: Optional[str] = None
     machine_type: Optional[str] = None
     machine_id: Optional[str] = None
     machine_number: Optional[str] = None
