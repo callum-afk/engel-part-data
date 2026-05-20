@@ -16,6 +16,22 @@ class BigQueryWriter:
     def _table(self, name: str) -> str:
         return f"{self.project_id}.{self.dataset_id}.{name}"
 
+    def ensure_processing_code_columns(self) -> None:
+        # Add processing_code to uploads if it does not exist yet.
+        self.client.query(
+            f"""
+            ALTER TABLE `{self._table('partdata_uploads')}`
+            ADD COLUMN IF NOT EXISTS processing_code STRING
+            """
+        ).result()
+        # Add processing_code to curated setups if it does not exist yet.
+        self.client.query(
+            f"""
+            ALTER TABLE `{self._table('partdata_curated_setups')}`
+            ADD COLUMN IF NOT EXISTS processing_code STRING
+            """
+        ).result()
+
     def already_parsed(self, file_sha256: str) -> bool:
         query = f"""
         SELECT COUNT(1) AS c

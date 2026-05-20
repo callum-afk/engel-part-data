@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from app.filename_utils import extract_processing_code
 from app.mappings import build_curated_setup
 from app.models import RawVariable
 from app.parser import _decode_cstr
@@ -31,7 +32,7 @@ def test_curated_mapping_uses_tempering_setvalue_and_profile_ry():
     ]
 
     # Run curated setup mapping with metadata seeded from properties.
-    curated, _profiles = build_curated_setup("u", "0.1.2", rows, {"material_number": "PR 0833", "mould_number": "Notpla ISO 527-A1", "machine_number": "195604"})
+    curated, _profiles = build_curated_setup("u", "0.1.4", rows, {"material_number": "PR 0833", "mould_number": "Notpla ISO 527-A1", "machine_number": "195604"})
 
     # Assert temperature mapping uses SetValue rows and ignores SetValLow alternatives.
     assert curated.barrel_zone_1_c == 170.0
@@ -51,3 +52,18 @@ def test_curated_mapping_uses_tempering_setvalue_and_profile_ry():
     assert curated.material_number == "PR 0833"
     assert curated.mould_number == "Notpla ISO 527-A1"
     assert curated.machine_number == "195604"
+
+
+def test_extract_processing_code_supports_expected_patterns():
+    # Match canonical filename form.
+    assert extract_processing_code("setupfile_FM.partdata") == "FM"
+    # Match uploader-prefixed filename form.
+    assert extract_processing_code("20260520_091530_setupfile_fm.partdata") == "FM"
+    # Use basename only when full source path is passed.
+    assert extract_processing_code("machines/265746/1/data/setupfile_KY.partdata") == "KY"
+
+
+def test_extract_processing_code_returns_none_for_non_matching_names():
+    # Non-matching names should safely return None.
+    assert extract_processing_code("random.partdata") is None
+    assert extract_processing_code("setupfile.partdata") is None
